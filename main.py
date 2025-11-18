@@ -6,21 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Later you can add Pandas, Plotly, QuantLib, etc. if you want.
-# A. Payoff logic in OptionContract.payoff()
-# Max/Min intrinsic logic
-# Adjustment for long/short
-# Adding/subtracting premium
-# Multiplying by quantity
-#
-# B. Strategy aggregation logic
-# Replace the placeholder pass with real accumulation
-#
-# C. Optional: Parity logic
-# Build synthetic equivalents
-# Compare strategy price vs parity-implied value
-# Everything else (flow, structure, plotting) is ready for you.
-
 # ============================================================
 # 2. Contract Class
 # ============================================================
@@ -52,11 +37,6 @@ class OptionContract:
 
         Return a NumPy array of same length as S.
         """
-
-        # e.g., intrinsic = np.maximum(S - self.strike, 0) for calls
-        # then subtract the premium
-        # then flip if short
-        # then adjust for quantity
 
         # Determine shape of the payoff graph
         if self.option_type == 'call':
@@ -98,7 +78,6 @@ class OptionStrategy:
 
         # Loop through contracts and add their individual payoff arrays
         for c in self.contracts:
-            # TODO: add c.payoff(S) to total once payoff() is implemented
             total += c.payoff(S)
 
         return total
