@@ -67,35 +67,87 @@ def plot_strategy_plotly(S, payoff, parity=None):
 # 3. Dash App Layout
 # ============================================================
 
-app = Dash(__name__)
+external_stylesheets = ['https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css']
+app = Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = "Options Strategy Dashboard"
 
-app.layout = html.Div([
-    html.H1("Interactive Options Strategy Dashboard"),
+app.layout = html.Div(
+    className="bg-gray-50 min-h-screen p-8",
+    children = [
+        html.H1("Interactive Options Strategy Dashboard",
+                className = "text-4xl font-bold text-center text-gray-800 mb-8"),
 
-    html.Div([
-        html.Div([
-            html.Label('Min X'),
-            dcc.Input(id='S_min', type='number', value=50, style={'width':'100px'})
-            ], style={'display':'inline-block', 'marginRight':'20px'}),
-        html.Div([
-            html.Label('Max X'),
-            dcc.Input(id='S_max', type='number', value=150, style={'width':'100px'})
-        ], style={'display':'inline-block', 'marginRight':'20px'}),
-        html.Div([
-            html.Label('Points'),
-            dcc.Input(id='S_points', type='number', value=500, style={'width':'100px'})
-        ], style={'display':'inline-block'})
-    ], style={'marginBottom':'20px'}),
+        #Graph Settings Container
+        html.Div(
+            className = "bg-white p-6 rounded-xl shadow-lg mb-8",
+            children = [
+                html.Div([
+                    html.H3("Chart Range", className="text-xl font-semibold text-gray-700 mb-4"),
 
-    html.H3("Contracts"),
-    html.Div(id='contracts-container', children=[]),
-    html.Button('Add Contract', id='add-contract', n_clicks=0, style={'marginTop':'10px'}),
+                    html.Div([
+                        html.Label('Min Underlying Price (S)', className="block text-sm font-medium text-gray-600"),
+                        dcc.Input(id='S_min', type='number', value=50, className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2')
+                    ], className= "w-1/3" ),
 
-    html.Hr(),
+                    html.Div([
+                        html.Label('Max Underlying Price (S)', className="block text-sm font-medium text-gray-600"),
+                        dcc.Input(id='S_max', type='number', value=150, className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2')
+                    ], className='w-1/3'),
 
-    dcc.Graph(id='payoff-graph')
-], style={'width':'90%', 'margin':'auto'})
+                    html.Div([
+                        html.Label('Data Points', className="block text-sm font-medium text-gray-600"),
+                        dcc.Input(id='S_points', type='number', value=500, className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2')
+                    ], className="w-1/3"),
+
+                ], className = "flex space-x-6"),
+            ]
+        ),
+
+        #Contracts Container
+        html.Div(
+            className = "bg-white p-6 rounded-xl shadow-lg mb-8",
+            children = [
+
+                html.Div([
+                    html.H3("Contracts", className = "text-xl font-semibold text-gray-700 mb-4"),
+
+                    html.Button(
+                        '▼',
+                        id = 'toggle-contracts-button',
+                        n_clicks = 0,
+                        className='text-xl font-bold p-1 hover:text-green-600 transition duration-150'
+                    )
+                    ], className='flex justify-between items-center mb-4 border-b pb-3'
+                ),
+
+                #collapsible content
+                html.Div(
+                    id = "collapsible-content",
+                    style = {'display': 'block'},
+                    children = [
+                        html.Div(id='contracts-container', children=[]),
+                        html.Button('➕ Add Contract',
+                                    id='add-contract',
+                                    n_clicks=0,
+                                    className='mt-4 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition duration-150'
+                                    )
+                    ]
+                )
+            ]
+        ),
+
+        html.Hr(className="my-8 border-gray-300"),
+
+    html.Div(
+        className="bg-white p-6 rounded-xl shadow-lg",
+        children = [
+            dcc.Graph(id='payoff-graph')
+        ]
+    )
+    ]
+    , style={'maxWidth':'1200px', 'margin':'0 auto'} # Center content
+)
+
 
 # ============================================================
 # 4. Callbacks
@@ -121,14 +173,29 @@ def update_contracts(add_clicks, remove_clicks, children):
     # Add contract
     if triggered_id == 'add-contract':
         new_index = len(children)
+
+        input_class = 'border border-gray-300 rounded-md shadow-sm p-2 w-full text-sm'
+        dropdown_class = 'border border-gray-300 rounded-md shadow-sm text-sm'
+
         new_row = html.Div([
-            dcc.Dropdown(['call','put','underlying'], 'call', id={'type':'option_type','index':new_index}, style={'width':'100px','display':'inline-block','marginRight':'5px'}),
-            dcc.Dropdown(['long','short'], 'long', id={'type':'position','index':new_index}, style={'width':'100px','display':'inline-block','marginRight':'5px'}),
-            dcc.Input(id={'type':'strike','index':new_index}, type='number', value=100, placeholder='Strike', style={'width':'80px','marginRight':'5px'}),
-            dcc.Input(id={'type':'premium','index':new_index}, type='number', value=5, placeholder='Premium', style={'width':'80px','marginRight':'5px'}),
-            dcc.Input(id={'type':'quantity','index':new_index}, type='number', value=1, placeholder='Quantity', style={'width':'60px','marginRight':'5px'}),
-            html.Button('Remove', id={'type':'remove-contract','index':new_index}, n_clicks=0)
-        ], style={'marginBottom':'5px'}, id={'type':'contract-row','index':new_index})
+            html.Div([dcc.Dropdown(['call','put','underlying'], 'call', id={'type':'option_type','index':new_index}, className=dropdown_class)
+                    ], className="w-1/6"),
+            html.Div([dcc.Dropdown(['long','short'], 'long', id={'type':'position','index':new_index}, className=dropdown_class)
+                    ], className="w-1/6"),
+            html.Div([dcc.Input(id={'type':'strike','index':new_index}, type='number', value=100, placeholder='Strike', className=input_class)
+                    ], className="w-1/6"),
+            html.Div([dcc.Input(id={'type':'premium','index':new_index}, type='number', value=5, placeholder='Premium', className=input_class),
+                    ], className="w-1/6"),
+            html.Div([dcc.Input(id={'type':'quantity','index':new_index}, type='number', value=1, placeholder='Quantity', className=input_class),
+                    ], className = "w-1/6"),
+            html.Div([
+                    html.Button('➖ Remove',
+                                id={'type':'remove-contract','index':new_index},
+                                n_clicks=0,
+                                className='px-3 py-1 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition duration-150 w-full'
+                                )
+                    ], className="w-1/6 flex items-center justify-center"),
+        ], className='flex space-x-3 mb-3 items-center', id={'type':'contract-row','index':new_index})
         children.append(new_row)
 
     # Remove contract
@@ -161,9 +228,24 @@ def update_graph(option_types, positions, strikes, premiums, quantities, S_min, 
     fig = plot_strategy_plotly(S, payoff)
     return fig
 
+#Toggle Collapsible Content
+@app.callback(
+    [Output('collapsible-content', 'style'),
+     Output('toggle-contracts-button', 'children')],
+    [Input('toggle-contracts-button', 'n_clicks')],
+    [State('collapsible-content', 'style')]
+)
+def toggle_contracts_visibility(n_clicks, style):
+    if n_clicks is None or n_clicks == 0:
+        return {'display': 'block'}, '▼'
+    if style and style.get('display') == 'block':
+        return {'display': 'none'}, '▶'
+    else:
+        return {'display': 'block'}, '▼'
+
 # ============================================================
 # 5. Run App
 # ============================================================
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)
